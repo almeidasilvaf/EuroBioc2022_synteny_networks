@@ -1,0 +1,218 @@
+Data acquisition - Chlorophyta genomes
+================
+
+# proteomes.rda
+
+The object `proteomes.rda` contains the translated sequences of primary
+transcripts for each species, and it was obtained with the following
+code:
+
+``` r
+#----Get proteomes--------------------------------------------------------------
+proteome_urls <- c(
+    Aprotothecoides = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.apr.fasta.gz",
+    Helicosporidiumsp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.hsp.fasta.gz",
+    Chlorellasp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.cnc64a.fasta.gz",
+    PicRCC4223 = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.prcc4223.fasta.gz",
+    PicSE3 = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.pse3.fasta.gz",
+    Asterochlorissp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.acg.fasta.gz",
+    Csubellipsoidea = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.cvu.fasta.gz",
+    Creinhardtii = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.cre.fasta.gz",
+    Vcarteri = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.vca.fasta.gz",
+    Bprasinos = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.bprrcc1105.fasta.gz",
+    Otauri = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.ota.fasta.gz",
+    Osp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.orcc809.fasta.gz",
+    Olucimarinus = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.olu.fasta.gz",
+    Omediterraneus = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.ome.fasta.gz",
+    Msp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.mrcc299.fasta.gz",
+    Mpusilla = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.mpu.fasta.gz",
+    Ppatens = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/proteome.selected_transcript.ppa.fasta.gz"
+)
+
+## Headers in .fa files have protein IDs. Read proteomes and keep only gene IDs
+proteomes <- lapply(proteome_urls, function(x) {
+    seq <- Biostrings::readAAStringSet(x)
+    names(seq) <- gsub(".* \\| ", "", names(seq))
+    return(seq)
+})
+
+save(
+    proteomes, 
+    file = here::here("data", "proteomes.rda"),
+    compress = "xz"
+)
+```
+
+# annotation.rda
+
+The object `annotation.rda` contains the gene ranges for each species.
+To reduce file size, some unnecessary fields of the original GFF3 files
+were removed, as described below:
+
+``` r
+#----Get gene ranges------------------------------------------------------------
+granges_urls <- c(
+    Aprotothecoides = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/apr/annotation.selected_transcript.exon_features.apr.gff3.gz",
+    Helicosporidiumsp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/hsp/annotation.selected_transcript.exon_features.hsp.gff3.gz",
+    Chlorellasp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/cnc64a/annotation.selected_transcript.exon_features.cnc64a.gff3.gz",
+    PicRCC4223 = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/prcc4223/annotation.selected_transcript.exon_features.prcc4223.gff3.gz",
+    PicSE3 = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/pse3/annotation.selected_transcript.exon_features.pse3.gff3.gz",
+    Asterochlorissp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/acg/annotation.selected_transcript.exon_features.acg.gff3.gz",
+    Csubellipsoidea = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/cvu/annotation.selected_transcript.exon_features.cvu.gff3.gz",
+    Creinhardtii = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/cre/annotation.selected_transcript.exon_features.cre.gff3.gz",
+    Vcarteri = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/vca/annotation.selected_transcript.exon_features.vca.gff3.gz",
+    Bprasinos = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/bprrcc1105/annotation.selected_transcript.exon_features.bprrcc1105.gff3.gz",
+    Otauri = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/ota/annotation.selected_transcript.exon_features.ota.gff3.gz",
+    Osp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/orcc809/annotation.selected_transcript.exon_features.orcc809.gff3.gz",
+    Olucimarinus = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/olu/annotation.selected_transcript.exon_features.olu.gff3.gz",
+    Omediterraneus = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/ome/annotation.selected_transcript.exon_features.ome.gff3.gz",
+    Msp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/mrcc299/annotation.selected_transcript.exon_features.mrcc299.gff3.gz",
+    Mpusilla = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/mpu/annotation.selected_transcript.exon_features.mpu.gff3.gz",
+    Ppatens = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/GFF/ppa/annotation.selected_transcript.exon_features.ppa.gff3.gz"
+)
+
+## Read files and keep only required features and columns
+annotation <- lapply(granges_urls, function(x) {
+    ranges <- rtracklayer::import(x)
+    
+    ranges <- ranges[ranges$type == "gene", ]
+    ranges$Parent <- NULL
+    ranges$phase <- NULL
+    ranges$score <- NULL
+    ranges$source <- NULL
+    ranges$pid <- NULL
+    ranges$name <- NULL
+    ranges$Name <- NULL
+    ranges$ID <- NULL
+    return(ranges)
+})
+
+save(
+    annotation,
+    file = here::here("data", "annotation.rda"),
+    compress = "xz"
+)
+```
+
+# diamond_list.rda
+
+The object `diamond_list.rda` is a list of data frames containing the
+BLAST tabular output for pairwise similarity searches.
+
+``` r
+# Load data
+library(here)
+load(here("data", "annotation.rda"))
+load(here("data", "proteomes.rda"))
+
+pdata <- process_input(proteomes, annotation)
+diamond <- run_diamond(seq = pdata$seq)
+diamond_list <- lapply(diamond, function(x) {
+    return(x[x$evalue < 1e-05, ])
+})
+save(
+    diamond_list,
+    file = here("data", "diamond_list.rda"),
+    compress = "xz"
+)
+```
+
+# profiles.rda
+
+The object `profiles.rda` contains a matrix of phylogenomic profiles for
+the algae synteny network.
+
+``` r
+set.seed(123)
+load(here("data", "annotation.rda"))
+load(here("data", "proteomes.rda"))
+load(here("data", "diamond_list.rda"))
+
+# Process the data
+pdata <- process_input(proteomes, annotation)
+
+# Infer synteny network
+algae_network <- infer_syntenet(
+    blast_list = diamond, 
+    annotation = pdata$annotation
+)
+
+# Get clusters
+clusters <- cluster_network(algae_network)
+
+# Get phylogenomic profiles
+profiles <- phylogenomic_profile(clusters)
+
+save(
+    profiles,
+    file = here("data", "profiles.rda"),
+    compress = "xz"
+)
+```
+
+# cds.rda
+
+The object `cds.rda` contains the CDS of Chlorophyta genomes.
+
+``` r
+library(dplyr)
+library(Biostrings)
+library(here)
+
+#----Get coding sequences--------------------------------------------------
+cds_urls <- c(
+    Aprotothecoides = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.apr.fasta.gz",
+    Helicosporidiumsp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.hsp.fasta.gz",
+    Chlorellasp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.cnc64a.fasta.gz",
+    PicRCC4223 = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.prcc4223.fasta.gz",
+    PicSE3 = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.pse3.fasta.gz",
+    Asterochlorissp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.acg.fasta.gz",
+    Csubellipsoidea = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.cvu.fasta.gz",
+    Creinhardtii = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.cre.fasta.gz",
+    Vcarteri = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.vca.fasta.gz",
+    Bprasinos = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.bprrcc1105.fasta.gz",
+    Otauri = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.ota.fasta.gz",
+    Osp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.orcc809.fasta.gz",
+    Olucimarinus = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.olu.fasta.gz",
+    Omediterraneus = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.ome.fasta.gz",
+    Msp = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.mrcc299.fasta.gz",
+    Mpusilla = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.mpu.fasta.gz",
+    Ppatens = "ftp://ftp.psb.ugent.be/pub/plaza/plaza_pico_03/Fasta/cds.selected_transcript.ppa.fasta.gz"
+)
+
+## Headers in .fa files have protein IDs. Read sequences and keep only gene IDs
+codingsequences <- lapply(cds_urls, function(x) {
+    seq <- Biostrings::readDNAStringSet(x)
+    names(seq) <- gsub(".* \\| ", "", names(seq))
+    return(seq)
+})
+
+## Convert List of DNAStringSet into one big DNAStringSet
+codingsequences <- Biostrings::DNAStringSet(
+    unlist(DNAStringSetList(codingsequences, use.names = FALSE))
+)
+
+## Get only CDs for genes in clusters of >=10 genes
+load(here::here("data", "clusters.rda"))
+cluster10 <- clusters %>%
+    count(Cluster) %>%
+    filter(n >= 10)
+
+genes_cluster10 <- clusters$Gene[clusters$Cluster %in% cluster10$Cluster]
+genes_cluster10 <- gsub("[a-zA-Z]{3,5}_", "", genes_cluster10)
+
+cds <- codingsequences[genes_cluster10]
+writeXStringSet(
+    cds,
+    filepath = file.path(tempdir(), "seq.fa")
+)
+
+cds <- readDNAStringSet(file.path(tempdir(), "seq.fa"))
+
+## Save codingsequences object
+save(
+    cds, 
+    file = here::here("data", "cds.rda"),
+    compress = "xz"
+)
+```
