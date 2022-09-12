@@ -1,0 +1,359 @@
+---
+title: "Downstream Analysis of Synteny Networks with MSA2dist"
+author: "Kristian K Ullrich"
+institute: "Max Planck Institute for Evolutionary Biology"
+knitr:
+    opts_chunk: 
+      fig.align: 'center'
+execute:
+    message: false
+    warning: false
+format:
+    revealjs:
+        self-contained: true
+        width: 1600
+        height: 900
+        scrollable: true
+        theme: [default, styles.scss]
+        incremental: true
+        logo: figs/mpi_evolbio_logo.png
+        footer: "Kristian K Ullrich @kullrich"
+        highlight-style: "a11y"
+        title-slide-attributes:
+            data-background-image: figs/MSA2distLogo.png
+            data-background-size: 30%
+            data-background-position: 95% 50%
+---
+## Background - DNA Evolution
+
+::: aside
+Grantham R. **Science** *185.4154* (1974).
+
+Kimura M. **Nature** *217.5129* (1968).
+
+Ohno S. **Springer Science & Business Media** (2013).
+:::
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+A matter of distance.
+
+```{r pam}
+library(dplyr)
+tibble::rownames_to_column(data.frame(MSA2dist::granthamMatrix())[1:20, 1:20]) %>% tidyr::gather(colname, value, -rowname) %>% ggplot2::ggplot(ggplot2::aes(x = rowname, y = colname, fill = value)) + ggplot2::geom_tile() + ggplot2::ylab("amino acids") + ggplot2::xlab("amino acids") + ggplot2::ggtitle("PAM250")
+```
+
+:::
+
+::: {.column width="50%"}
+
+![](figs/kimura_1968.png){width=80% fig-align="center"}
+
+![](figs/sohno_1970.png){width=80% fig-align="center"}
+
+:::
+
+::::
+
+## Background - Coding Sequences
+
+::: aside
+https://en.wikipedia.org/wiki/DNA_and_RNA_codon_tables
+:::
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Synonymous** and **non-synonymous** substitutions: nucleotide substitutions might lead to changes on amino acid level.
+
+Typically used to:
+
+1. Detect and date **whole-genome duplication (WGD)** events;
+2. Predict **selective pressure** acting on a protein;
+3. Predict **selective pressure** acting on a codon;
+4. Investigate **codon usage** (R/Bioconductor package [coRdon](https://www.bioconductor.org/packages/release/bioc/html/coRdon.html)).
+
+:::
+
+::: {.column width="50%"}
+
+![](figs/codon_table.png){width=90% fig-align="center"}
+
+:::
+
+::::
+
+## *MSA2dist*
+
+An R/Bioconductor package to calculate pairwise distances between all sequences of a MultipleSequenceAlignment (**DNAStringSet** or **AAStringSet**) and to conduct codon based analysis.
+
+`r BiocStyle::Biocpkg("MSA2dist")` **Features:**
+
+1. Calculates pairwise AA, DNA and IUPAC distances;
+2. Calculates Synonymous and NonSynonymous Substitutions (dN/dS) [KaKs_Calcultor 2.0 models](https://doi.org/10.1016/s1672-0229(10)60008-3) (C++ ported to R with Rcpp);
+3. Use pre-calculated MSA or conduct all possible pairwise alignments prior dN/dS calculation;
+4. Calculate average behavior of each codon from MSA.
+
+## *MSA2dist* workflow
+
+::: aside
+Ullrich KK. **JOSS** (2020).
+:::
+
+![](figs/rbh2kaks.png){width=75% fig-align="center"}
+
+## Installation
+
+From Bioconductor:
+
+```{r install_bioc}
+#| eval: false
+#| echo: true
+BiocManager::install(version='devel')
+BiocManager::install("MSA2dist")
+```
+
+<br>
+
+From GitHub:
+
+```{r install_github}
+#| eval: false
+#| echo: true
+remotes::install_github("kullrich/MSA2dist")
+```
+
+## Example data set
+
+**Data:** Whole-genome coding sequences and gene ranges for Chlorophyta algae + *Physcomitrium patens* as an outgroup.
+
+**Source:** [Pico-PLAZA 3.0](https://bioinformatics.psb.ugent.be/plaza/versions/plaza_pico_03/)
+
+**Where to find:** the `data/` directory in the
+[GitHub repo associated with this presentation](https://github.com/almeidasilvaf/EuroBioc2022_synteny_networks).
+
+:::: {.columns}
+
+::: {.column width="50%}
+```{r}
+#| echo: false
+fs::dir_tree("data")
+```
+
+1. `cds.rda`: *DNAStringSet* object.
+2. `clusters.rda`: Pre-calculated *syntenet* clusters.
+
+:::
+
+::: {.column width="50%"}
+![](figs/chlorophyta_plaza.png)
+:::
+
+::::
+
+## Example data set: `cds`
+
+```{r data_cds}
+#| echo: true
+# Load necessary libraries
+library(MSA2dist)
+library(Biostrings)
+library(tidyr)
+library(dplyr)
+library(stringr)
+
+# Load data set cds
+load(here::here("data", "cds.rda"))
+
+# Inspect data
+head(names(cds))
+```
+
+## Example data set: `clusters`
+
+```{r data_clusters}
+#| echo: true
+# Load data set clusters
+load(here::here("data", "clusters.rda"))
+
+# Inspect data
+head(clusters)
+length(table(clusters$Cluster))
+```
+
+## Fetch coding sequences for a specific cluster
+
+```{r fetch_cds_from_cluster1}
+#| echo: true
+# Get size distribution of clusters
+head(table(clusters$Cluster))
+
+# Get first cluster of size 10 (fc10)
+fc10 <- which(table(clusters$Cluster)==10)[1]
+
+my_cluster <- clusters %>%
+    dplyr::filter(Cluster==fc10)
+
+head(my_cluster)
+```
+
+## Fetch coding sequences for a specific cluster
+
+```{r fetch_cds_from_cluster2}
+#| echo: true
+# Remove species unique identifier and add as GeneID
+my_cluster$GeneID <- stringr::str_split_fixed(my_cluster$Gene, "_", 2)[, 2]
+
+head(my_cluster)
+
+# Fetch coding sequences
+my_cds <- cds[match(my_cluster$GeneID, 
+    names(cds))]
+
+head(my_cds)
+```
+
+## Coding sequence alignment
+
+To calculate a coding sequence alignment for two sequences:
+
+```{r cds2codonaln}
+#| echo: true
+# Get coding sequence alignment
+cds1_cds2_aln <- cds2codonaln(cds1 = my_cds[1], cds2 = my_cds[2], remove.gaps = FALSE)
+cds1_cds2_aln
+```
+
+To calculate dN/dS from this alignment:
+
+```{r dnastring2kaks}
+#| echo: true
+# Calculate dN/dS for this alignment; model = Li
+cds1_cds2_kaks <- dnastring2kaks(cds1_cds2_aln,
+    model = "Li", threads = 1, isMSA = TRUE)
+cds1_cds2_kaks
+```
+
+Other *Biostrings::pairwiseAlignment* options can be set:
+
+```
+type = "global", substitutionMatrix = "BLOSUM62"
+gapOpening = 10, gapExtension = 0.5
+```
+
+## Parallelized pairwise coding sequence alignments
+
+To calculate all pairwise combinations:
+
+```{r dnastring2kaks_isMSA}
+#| echo: true
+#| code-line-numbers: 2-4,7
+start_time <- Sys.time()
+# Calculate dN/dS for the whole cluster; model = YN
+my_cds_kaks <- dnastring2kaks(my_cds,
+    model = "YN", threads = 2, isMSA = FALSE)
+end_time <- Sys.time()
+
+head(my_cds_kaks, n = 4)
+```
+
+How long did it take?
+
+```{r dnastring2kaks_time}
+#| echo: true
+end_time - start_time
+```
+
+## Transform Ka values into a distance matrix
+
+```{r ka_mat1}
+#| echo: true
+ka_mat <- my_cds_kaks %>%
+    dplyr::select(seq1, seq2, Ka) %>%
+    dplyr::mutate(Ka = as.numeric(Ka)) %>%
+    tidyr::pivot_wider(names_from = "seq1", values_from = Ka)
+
+head(ka_mat)
+```
+
+## Transform Ka values into a distance matrix
+
+```{r ka_mat2}
+#| echo: true
+# Extract sequence names
+seq_names <- c(colnames(ka_mat)[-1], rev(ka_mat$seq2)[1])
+
+# Add NA to fill into square distance matrix
+ka_mat <- NA |> rbind(ka_mat[, -1]) |> cbind(NA) |>
+    tidyr::as_tibble()
+
+# Set column names
+colnames(ka_mat) <- seq_names
+
+head(ka_mat)
+```
+
+## Use distance matrix to plot bionjs tree
+
+*ape::bionjs* reconstructs a phylogenetic tree from a distance matrix with possibly missing values:
+
+```{r bionjs_tree}
+#| echo: true
+# Calculate and plot bionjs tree
+(ka_mat |> as.dist() |> ape::bionjs()) |>
+    plot(cex=1)
+```
+
+## Calculate average behavior of each codon
+
+Here, a pre-calculated MSA is necessary:
+
+```{r codonmat2xy}
+#| echo: true
+# load example data
+data(hiv, package="MSA2dist")
+
+# calculate average behavior
+hiv.xy <- hiv |> dnastring2codonmat() |> codonmat2xy()
+```
+
+Plot average behavior of each codon:
+
+```{r}
+library(tidyr)
+library(ggplot2)
+print(hiv.xy |> dplyr::select(Codon,SynMean,NonSynMean,IndelMean) |>
+    tidyr::gather(variable, values, -Codon) |>
+    ggplot2::ggplot(aes(x=Codon, y=values)) + 
+    ggplot2::geom_line(aes(colour=factor(variable))) + 
+    ggplot2::geom_point(aes(colour=factor(variable))) + 
+    ggplot2::ggtitle("HIV-1 sample 136 patient 1 from
+        Sweden envelope glycoprotein (env) gene"))
+```
+
+## Here's where you can find me:
+
+::::: columns
+::: {.column width="40%"}
+<br><br>
+![](figs/find-kullrich-at.png){width='80%'}
+
+:::
+
+::: {.column width="60%"}
+
+<br><br><br>
+
+{{< fa brands github >}} [kullrich](https://github.com/kullrich)
+
+{{< fa globe >}} [kullrich.github.io](https://kullrich.github.io)
+
+{{< ai google-scholar >}} [Kristian K Ullrich](https://scholar.google.com/citations?user=uzZoRSsAAAAJ&hl=en)
+
+{{< ai orcid >}} [0000-0003-4308-9626](https://orcid.org/0000-0003-4308-9626)
+
+:::
+
+:::::

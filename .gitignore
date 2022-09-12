@@ -5,4 +5,4 @@
 *.Rproj
 /.quarto/
 _site/
-*.html
+code/*.Rmd

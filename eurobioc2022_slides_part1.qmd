@@ -1,0 +1,626 @@
+---
+title: "Inference and Analysis of Synteny Networks with *syntenet*"
+author: "Fabricio Almeida-Silva"
+institute: "VIB-UGent Center for Plant Systems Biology"
+knitr:
+    opts_chunk: 
+      fig.align: 'center'
+execute:
+    message: false
+    warning: false
+format:
+    revealjs:
+        self-contained: true
+        width: 1600
+        height: 900
+        scrollable: true
+        theme: [default, styles.scss]
+        incremental: true
+        logo: "https://www.psb.ugent.be/themes/custom/minimalplus/logo.svg"
+        footer: "Fabricio Almeida-Silva @almeidasilvaf"
+        highlight-style: "a11y"
+        title-slide-attributes:
+            data-background-image: figs/syntenet_logo.png
+            data-background-size: 30%
+            data-background-position: 95% 50%
+---
+
+## Acknowledgements
+
+:::: {.columns}
+::: {.column width="40%"}
+People involved in this work:
+
+::: {.nonincremental}
+- Tao Zhao and M. Eric Schranz
+- Yves Van de Peer
+:::
+
+Funding:
+
+::: {.nonincremental}
+- ERC
+- UGent
+- Max Planck Society
+:::
+
+:::
+
+::: {.column width="60%"}
+![](figs/acknowledgements_fig.png){fig-align="center"}
+:::
+::::
+
+## Background
+
+::: aside
+Ling *et al.,* 2018. Nature
+:::
+
+**Synteny** or **colinearity**: preservation of gene content and order between different genomic segments.
+
+![](figs/synteny_definition.png){fig-align="center" width=60%}
+
+Pairwise comparisons can be both **intraspecies** and **interspecies**.
+
+
+## Intraspecies synteny detection
+
+::: aside
+Ma *et al.,* 2021. The Plant Journal
+:::
+
+:::: {.columns}
+
+::: {.column width="50%"}
+Typically used to:
+
+1. Detect **whole-genome duplication (WGD)** events;
+2. Explore population structure and genomic rearrangements.
+
+:::
+
+::: {.column width="50%"}
+
+![](figs/intraspecies_synteny.png){width=90% fig-align="center"}
+
+:::
+
+::::
+
+## Interspecies synteny detection
+
+:::: {.columns}
+
+::: {.column width="40%"}
+Typically used to explore:
+
+1. Divergence between species;
+2. Evolution of gene families and traits of interest;
+3. Genomic rearrangements.
+
+:::
+
+::: {.column width="60%"}
+
+![](figs/interspecies_synteny.png){width=100% fig-align="center"}
+
+:::
+
+::::
+
+::: aside
+Liu *et al.*, 2018. BMC Bioinformatics
+:::
+
+## The problem
+
+::: aside
+Zhao *et al.,* 2021. Nature Communications
+:::
+
+When comparing multiple species, synteny analyses are hard to interpret
+and visualize.
+
+![](figs/example_synteny_network_cropped.png){fig-align="center" width=60%}
+
+## The solution
+
+Network representation of synteny: nodes represent genes, which are connected if they are in the same syntenic block.
+
+::: aside
+Zhao *et al.,* 2021. Nature Communications
+:::
+
+![](figs/example_synteny_network.png){fig-align="center" width=100%}
+
+## History of synteny networks
+
+
+Proposal and first description of the method.
+
+![](figs/paper1.png){fig-align="center"}
+
+## History of synteny networks
+
+Application of synteny networks to study the evolution of MADS-box
+transcription factors in angiosperms.
+
+![](figs/paper2.png)
+
+## History of synteny networks
+
+Application of synteny networks to explore global patterns in mammalian
+and angiosperm genomes.
+
+![](figs/paper3.png){fig-align="center"}
+
+## History of synteny networks
+
+Extension of method: inferring phylogenies from synteny networks.
+
+![](figs/paper4.png){fig-align="center"}
+
+## The reproducibility problem
+
+:::: {.columns}
+
+::: {.column width="50%"}
+Code were available, but not designed to be distributed:
+
+- Several separate *.sh* and *.R* scripts;
+- Users had to process the data by themselves first (not trivial);
+- Application to new data sets required editing lines of the source code.
+:::
+
+:::{.column width="50%"}
+<blockquote class="twitter-tweet"><p lang="es" dir="ltr">Bioinformatic pipelines<a href="https://t.co/bHxTpEql0W">pic.twitter.com/bHxTpEql0W</a></p>&mdash; Elin Videvall (@ElinVidevall) <a href="https://twitter.com/ElinVidevall/status/1382540865088917507?ref_src=twsrc%5Etfw">April 15, 2021</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+:::
+
+::::
+
+## *syntenet* to the rescue!
+
+An R/Bioconductor package to infer synteny network from whole-genome
+protein sequence data.
+
+Anchor pairs are interpreted as linked nodes of 
+an **undirected unweighted graph**.
+
+**Features:**
+
+1. Synteny detection using a native implementation of the [MCScanX algorithm](https://doi.org/10.1093/nar/gkr1293) (C++ ported to R with Rcpp);
+2. Synteny network inference;
+3. Network clustering using the Infomap algorithm;
+4. Phylogenomic profiling - matrix 
+$m_{ij}$ with the number of genes from cluster $j$ in species $i$;
+5. Microsynteny-based phylogeny reconstruction with maximum likelihood
+(using IQTREE2).
+
+## *syntenet* workflow
+
+![](figs/fig1.png){fig-align="center"}
+
+## Further reading
+
+![](figs/preprint.png){fig-align="center"}
+
+## Shall we see it in action?
+
+![](https://media.giphy.com/media/m2Q7FEc0bEr4I/giphy.gif){fig-align="center"}
+
+## Installation
+
+From Bioconductor:
+
+```{r install_bioc}
+#| eval: false
+#| echo: true
+BiocManager::install(version='devel')
+BiocManager::install("syntenet")
+```
+
+<br>
+
+From GitHub:
+
+```{r install_github}
+#| eval: false
+#| echo: true
+remotes::install_github("almeidasilvaf/syntenet")
+```
+
+## Example data set
+
+**Data:** Whole-genome protein sequences and gene ranges for Chlorophyta algae + *Physcomitrium patens* as an outgroup.
+
+**Source:** [Pico-PLAZA 3.0](https://bioinformatics.psb.ugent.be/plaza/versions/plaza_pico_03/)
+
+**Where to find:** the `data/` directory in the
+[GitHub repo associated with this presentation](https://github.com/almeidasilvaf/EuroBioc2022_synteny_networks).
+
+:::: {.columns}
+
+::: {.column width="50%}
+```{r dir_tree}
+#| echo: false
+fs::dir_tree("data")
+```
+
+
+1. `annotation.rda`: *GRangesList* object with gene ranges.
+2. `proteomes.rda`: List of *AAStringSet* objects.
+
+:::
+
+::: {.column width="50%"}
+![](figs/chlorophyta_plaza.png)
+:::
+
+::::
+
+## Example data set: `annotation`
+
+```{r data_annotation}
+#| echo: true
+load(here::here("data", "annotation.rda"))
+
+# Inspect data
+names(annotation)
+head(annotation$Aprotothecoides)
+```
+
+## Example data set: `proteomes`
+
+```{r}
+#| echo: true
+load(here::here("data", "proteomes.rda"))
+
+# Inspect data
+names(proteomes)
+head(proteomes$Aprotothecoides)
+```
+
+## A quick check before starting
+
+![](https://media.giphy.com/media/8abAbOrQ9rvLG/giphy.gif){fig-align="center"}
+
+To enter the workflow, data must satisfy 3 conditions:
+
+1. Names of list elements in `proteomes` and `annotation` match;
+2. Number of sequences in `proteomes` is not greater than the number of genes in `annotation` (i.e., primary transcripts only);
+3. Sequence names in `proteomes` match gene names in `annotation`.
+
+
+
+## A quick check before starting
+
+The check can be performed with `check_input()`:
+
+```{r check_input}
+#| echo: true
+library(syntenet)
+check_input(proteomes, annotation)
+```
+
+## Data preprocessing
+
+The protein sequences and gene ranges are processed to:
+
+1. Remove period+number from sequence IDs (typically indicate isoforms), e.g.: 
+    - AT1G01010.1 &rarr; AT1G01010
+2. Add unique species ID to each gene and chromosome, e.g.:
+    - AT1G01010 &rarr; Atha_AT1G01010
+    - Chr1 &rarr; Atha_Chr1
+3. Remove strings representing stop codons (e.g., * at the end);
+4. Clean each *GRanges* object to keep only seqnames, ranges, and gene ID.
+
+## Data preprocessing
+
+Data preprocessing can be performed with `process_input()`.
+
+```{r preprocessing}
+#| echo: true
+pdata <- process_input(proteomes, annotation)
+dplyr::glimpse(pdata)
+```
+
+## Similarity search
+
+To detect synteny, you need a list of data frames with the tabular output of DIAMOND, BLASTp or similar programs. It can be obtained by:
+
+1. Exporting `pdata$seq` to FASTA files and using them as input to your favorite similarity search program;
+2. Using `r BiocStyle::Biocpkg("syntenet")`'s function `run_diamond()`, a wrapper that runs DIAMOND from the R session and parses the output as a list of data frames (recommended).
+
+## Similarity search
+
+To detect synteny, you need a list of data frames with the tabular output of DIAMOND, BLASTp or similar programs. It can be obtained by:
+
+::: {.nonincremental}
+
+1. Exporting `pdata$seq` to FASTA files and using them as input to your favorite similarity search program;
+2. Using `r BiocStyle::Biocpkg("syntenet")`'s function `run_diamond()`, a wrapper that runs DIAMOND from the R session and parses the output as a list of data frames (recommended).
+
+:::
+
+:::{.callout-important}
+The code below takes ~4-5 minutes to run.
+:::
+
+```{r run_diamond}
+#| eval: false
+#| echo: true
+if(diamond_is_installed()) {
+    diamond_list <- run_diamond(pdata$seq)
+}
+```
+
+
+## Similarity search
+
+To save time, we will load pre-computed output from `run_diamond()`.
+
+```{r load_diamond}
+#| echo: true
+load(here::here("data", "diamond_list.rda"))
+
+dplyr::glimpse(diamond_list)
+```
+
+## Synteny network inference
+
+To infer the synteny network, use the function `infer_syntenet()`.
+
+```{r infer_syntenet}
+#| echo: true
+#| code-line-numbers: 2-5,8
+start_time <- Sys.time() 
+algae_network <- infer_syntenet(
+    blast_list = diamond_list, 
+    annotation = pdata$annotation
+)
+end_time <- Sys.time()
+
+head(algae_network)
+```
+
+How long did it take?
+
+```{r net_inference_time}
+#| echo: true
+end_time - start_time
+```
+
+## Network clustering
+
+The function `cluster_network()` is used to assign each gene to a unique cluster using the Infomap algorithm.
+
+```{r network_clustering}
+#| echo: true
+clusters <- cluster_network(algae_network)
+head(clusters)
+```
+
+## Phylogenomic profiling
+
+The function `phylogenomic_profile()` groups synteny clusters using 
+Ward's clustering on a matrix of Jaccard distances.
+
+:::{.callout-warning}
+Calculating Jaccard similarity indices uses `vegan::vegdist()`, which
+temporarily creates a long vector that uses considerable memory.
+:::
+
+To avoid issues, let's load the pre-computed output from `phylogenomic_profile()`. 
+
+```{r load_profiles}
+#| echo: true
+load(here::here("data", "profiles.rda"))
+```
+
+Phylogenomic profiles can be generated with:
+
+```{r phylogenomic_profile}
+#| echo: true
+#| eval: false
+profiles <- phylogenomic_profile(clusters)
+```
+
+## Phylogenomic profiling
+
+Inspecting the output of `phylogenomic_profile()`:
+
+```{r inspect_phylogenomic_profiles}
+#| echo: true
+dplyr::glimpse(profiles)
+profiles$profile_matrix[1:10, 1:10]
+```
+
+## Visualizing phylogenomic profiles
+
+Profiles can be visualized as a heatmap or as a network.
+
+First, let's create a data frame of species taxonomy (row annotation)
+for the heatmap.
+
+```{r col_annotation_heatmap}
+#| echo: true
+# Create a data frame of taxonomic information for each species
+species_info <- data.frame(
+    Species = c(
+        "Aprotothecoides", "Chlorellasp", "PicRCC4223", 
+        "PicSE3", "Asterochlorissp", "Csubellipsoidea", "Creinhardtii", 
+        "Vcarteri", "Bprasinos", "Otauri", "Osp", "Olucimarinus", 
+        "Omediterraneus", "Msp", "Mpusilla", "Ppatens"
+    ),
+    Abbrev = c(
+        "Apro", "Chlo", "PicR", "PicS", "Aste", "Csub", "Crei",
+        "Vcar", "Bpra", "Otau", "Osp", "Oluc", "Omed", "Msp", 
+        "Mpus", "Ppat" 
+    ),
+    Clade = c(
+        rep("Trebouxiophyceae", 6), 
+        rep("Chlamydomonadales", 2),
+        rep("Marmiellales", 7), 
+        "Outgroup"
+    )
+)
+
+# Reorder columns and replace abbreviations with species names
+profiles$profile_matrix <- profiles$profile_matrix[, species_info$Abbrev]
+colnames(profiles$profile_matrix) <- species_info$Species
+```
+
+## Visualizing phylogenomic profiles
+
+To visualize profiles as a heatmap, use the function `plot_profiles()`.
+
+```{r heatmap_profiles}
+#| echo: true
+species_annotation <- species_info[, c("Species", "Clade")]
+plot_profiles(
+    profiles, 
+    species_annotation = species_annotation,
+    cluster_species = species_info$Species
+)
+```
+
+## Visualizing phylogenomic profiles
+
+To visualize clusters as a network, use the function `plot_network()`.
+
+```{r net_viz}
+#| echo: true
+plot_network(
+    algae_network, 
+    clusters, 
+    cluster_id = clusters$Cluster[1:5]
+)
+```
+
+## Visualizing phylogenomic profiles
+
+Networks can also be visualized interactively.
+
+```{r net_viz_interactive}
+#| echo: true
+#| code-line-numbers: "4"
+plot_network(
+    algae_network, 
+    clusters, cluster_id = clusters$Cluster[1:5], 
+    interactive = TRUE, dim_interactive = c(1500, 500)
+)
+```
+
+
+## Visualizing phylogenomic profiles
+
+Nodes can be colored using custom annotation.
+
+```{r net_viz_custom_annotation}
+#| echo: true
+genes <- unique(c(algae_network$Anchor1, algae_network$Anchor2))
+gene_annotation <- data.frame(
+    Gene = genes,
+    Abbrev = unlist(lapply(strsplit(genes, "_"), head, 1))
+) |>
+    merge(x = _, y = species_info) |>
+    dplyr::select(Gene, Clade)
+head(gene_annotation)
+```
+
+## Visualizing phylogenomic profiles
+
+Nodes can be colored using custom annotation.
+
+```{r net_viz_custom_annotation2}
+#| echo: true
+#| code-line-numbers: "5"
+plot_network(
+    algae_network, 
+    clusters, 
+    cluster_id = clusters$Cluster[1:5], 
+    color_by = gene_annotation
+)
+```
+
+## Microsynteny-based phylogeny inference
+
+To infer a phylogeny, the matrix of phylogenomic profiles must be 
+binarized and transposed with `binarize_and_transpose()`.
+
+```{r binarize_transpose}
+#| echo: true
+bt_mat <- binarize_and_transpose(profiles$profile_matrix)
+bt_mat[1:5, 1:5]
+```
+
+Then, you can:
+
+1. Use `profiles2phylip()` to write the transposed binary matrix to a PHYLIP file and run IQTREE2 (or something similar) from the command line;
+
+2. Use the helper function `infer_microsynteny_phylogeny()`, which allows you to run IQTREE2 from an R session. 
+
+## Microsynteny-based phylogeny inference
+
+`infer_microsynteny_phylogeny()` infers a phylogeny with IQTREE2
+and returns the path to output files (*tempdir()* by default).
+
+```{r phylogeny_inference}
+#| echo: true
+if(iqtree_is_installed()) {
+    phylo <- infer_microsynteny_phylogeny(
+        bt_mat, 
+        outgroup = "Ppatens", 
+        model = "MK+ASC+R",
+        threads = 1
+    )
+}
+phylo
+```
+
+## Phylogeny visualization
+
+You can read the *.treefile* file from `infer_microsynteny_phylogeny()`
+with the function `read.tree()` from 
+the `r BiocStyle::Biocpkg("treeio")` package and visualize it
+with the `r BiocStyle::Biocpkg("ggtree")` package.
+
+```{r phylogeny_viz}
+#| echo: true
+#| output-location: column
+library(ggtree)
+algae_tree <- read.tree(phylo[10])
+ggtree(algae_tree) +
+    geom_tiplab(size = 3) +
+    xlim(0, 0.2)
+```
+
+## Here's where you can find me:
+
+::::: columns
+::: {.column width="40%"}
+<br><br>
+![](figs/find-me-at.png){width='80%'}
+
+:::
+
+::: {.column width="60%"}
+
+<br><br><br>
+
+{{< fa brands twitter >}} [@almeidasilvaf](https://twitter.com/almeidasilvaf)
+
+{{< fa brands github >}} [almeidasilvaf](https://github.com/almeidasilvaf)
+
+{{< fa globe >}} [almeidasilvaf.github.io](https://almeidasilvaf.github.io)
+
+{{< ai google-scholar >}} [Fabricio Almeida-Silva](https://scholar.google.com/citations?user=zlnqH0AAAAAJ&hl=en)
+
+{{< ai orcid >}} [0000-0002-5314-2964](https://orcid.org/0000-0002-5314-2964)
+
+:::
+
+:::::
+
+# [Part 2](https://almeidasilvaf.github.io/EuroBioc2022_synteny_networks/eurobioc2022_slides_part2.html)
